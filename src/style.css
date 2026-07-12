@@ -208,6 +208,17 @@ button {
   position: relative;
 }
 
+.game-toolbar {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.quit-btn {
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
 .scoreboard-container {
   background: #ffffff;
   border-radius: 18px;

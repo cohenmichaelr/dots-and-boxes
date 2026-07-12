@@ -50,11 +50,15 @@ export function mountApp(root: HTMLElement): void {
     applyPlayerColorVars(document.documentElement, players)
     let state: GameState = createGameState(config.boardSize, players)
 
+    let active = true
+
     screen.replaceChildren()
+    const quitButton = el('button', { class: 'btn secondary quit-btn', onClick: handleQuitClick }, ['Quit Game'])
+    const gameToolbar = el('div', { class: 'game-toolbar' }, [quitButton])
     const scoreboardContainer = el('div', { class: 'scoreboard-container' })
     const boardWrapper = el('div', { class: 'board-wrapper' })
     const overlay = el('div', { class: 'game-over-overlay' })
-    screen.append(el('div', { class: 'game-screen' }, [scoreboardContainer, boardWrapper, overlay]))
+    screen.append(el('div', { class: 'game-screen' }, [gameToolbar, scoreboardContainer, boardWrapper, overlay]))
 
     const scoreboard: ScoreboardHandle = renderScoreboard(scoreboardContainer, players)
     const board: SvgBoardHandle = createSvgBoard(boardWrapper, state.board)
@@ -63,7 +67,32 @@ export function mountApp(root: HTMLElement): void {
       return state.players[state.currentPlayerIndex]
     }
 
+    function handleQuitClick(): void {
+      overlay.replaceChildren(
+        el('div', { class: 'game-over-panel' }, [
+          el('h2', {}, ['Quit this game?']),
+          el('p', { class: 'setup-subtitle' }, ['Current progress will be lost.']),
+          el('div', { class: 'game-over-actions' }, [
+            el('button', { class: 'btn primary', onClick: handleNewSetup }, ['Quit']),
+            el(
+              'button',
+              {
+                class: 'btn secondary',
+                onClick: () => {
+                  overlay.classList.remove('visible')
+                  overlay.replaceChildren()
+                },
+              },
+              ['Cancel'],
+            ),
+          ]),
+        ]),
+      )
+      overlay.classList.add('visible')
+    }
+
     function applyEdge(edgeId: EdgeId): void {
+      if (!active) return
       const mover = currentPlayer()
       const { state: nextState, completedBoxIds } = playTurn(state, edgeId)
       state = nextState
@@ -106,18 +135,21 @@ export function mountApp(root: HTMLElement): void {
     }
 
     function runComputerTurn(): void {
+      if (!active) return
       const mover = currentPlayer()
       if (mover.type !== 'computer' || !mover.difficulty) return
       applyEdge(chooseMove(state, mover.difficulty))
     }
 
     function handleRematch(): void {
+      active = false
       overlay.classList.remove('visible')
       overlay.replaceChildren()
       startGame(config)
     }
 
     function handleNewSetup(): void {
+      active = false
       overlay.classList.remove('visible')
       overlay.replaceChildren()
       showSetup()
