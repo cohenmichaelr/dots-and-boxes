@@ -2,6 +2,12 @@ import { playerColorVar } from '../render'
 import type { Player, PlayerId } from '../game/types'
 import { el } from './dom'
 
+export interface GameOverAction {
+  label: string
+  primary?: boolean
+  onClick: () => void
+}
+
 function titleFor(players: Player[], winnerIds: PlayerId[]): string {
   const byId = new Map(players.map((p) => [p.id, p]))
   if (winnerIds.length === players.length) return "It's a tie!"
@@ -16,8 +22,7 @@ export function renderGameOver(
   container: HTMLElement,
   players: Player[],
   winnerIds: PlayerId[],
-  onRematch: () => void,
-  onNewSetup: () => void,
+  actions: GameOverAction[],
 ): void {
   const ranked = [...players].sort((a, b) => b.score - a.score)
 
@@ -39,10 +44,13 @@ export function renderGameOver(
   const panel = el('div', { class: 'game-over-panel' }, [
     el('h2', {}, [titleFor(players, winnerIds)]),
     scoreList,
-    el('div', { class: 'game-over-actions' }, [
-      el('button', { class: 'btn primary', onClick: onRematch }, ['Rematch']),
-      el('button', { class: 'btn secondary', onClick: onNewSetup }, ['New Setup']),
-    ]),
+    el(
+      'div',
+      { class: 'game-over-actions' },
+      actions.map((action) =>
+        el('button', { class: `btn ${action.primary ? 'primary' : 'secondary'}`, onClick: action.onClick }, [action.label]),
+      ),
+    ),
   ])
 
   container.replaceChildren(panel)
