@@ -4,7 +4,6 @@ const THEME_CHANGE_EVENT = 'dots-and-boxes-themechange'
 export type ThemePreference = 'light' | 'dark'
 
 const BOARD_COLORS_LIGHT = {
-  background: '#fbf9f5',
   dot: '#2b2b33',
   lineGuide: 'rgba(43, 43, 51, 0.16)',
   selected: '#c9a227',
@@ -12,7 +11,6 @@ const BOARD_COLORS_LIGHT = {
 }
 
 const BOARD_COLORS_DARK = {
-  background: '#1c1c22',
   dot: '#e8e6f0',
   lineGuide: 'rgba(232, 230, 240, 0.2)',
   selected: '#e0b84a',
@@ -51,7 +49,6 @@ function onThemeChange(callback: () => void): void {
 export function applyBoardColorVars(root: HTMLElement): void {
   function apply(): void {
     const colors = resolveTheme() === 'dark' ? BOARD_COLORS_DARK : BOARD_COLORS_LIGHT
-    root.style.setProperty('--board-bg', colors.background)
     root.style.setProperty('--dot-color', colors.dot)
     root.style.setProperty('--line-guide-color', colors.lineGuide)
     root.style.setProperty('--selected-color', colors.selected)
