@@ -465,6 +465,7 @@ button {
   font-size: 14px;
   display: flex;
   flex-direction: column;
+  gap: 1px;
 }
 
 .score-row .badge {
@@ -692,6 +693,12 @@ button {
 .game-over-panel h2 {
   font-size: 24px;
   margin-bottom: 16px;
+}
+
+.series-summary {
+  margin: -8px 0 16px;
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 .final-scores {

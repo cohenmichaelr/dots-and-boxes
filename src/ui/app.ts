@@ -140,11 +140,12 @@ export function mountApp(root: HTMLElement): void {
     screen.replaceChildren()
     renderSetupScreen(screen, (config) => {
       sound.resumeIfNeeded()
-      startGame(config)
+      const seriesWins = new Map(config.players.map((_, index) => [index, 0]))
+      startGame(config, seriesWins)
     })
   }
 
-  function startGame(config: GameSetupConfig): void {
+  function startGame(config: GameSetupConfig, seriesWins: Map<number, number>): void {
     const players = createPlayers(config.players)
     applyPlayerColorVars(document.documentElement, players)
     let state: GameState = createGameState(config.boardSize, players)
@@ -159,7 +160,7 @@ export function mountApp(root: HTMLElement): void {
     const overlay = el('div', { class: 'game-over-overlay' })
     screen.append(el('div', { class: 'game-screen' }, [gameToolbar, scoreboardContainer, boardWrapper, overlay]))
 
-    const scoreboard: ScoreboardHandle = renderScoreboard(scoreboardContainer, players)
+    const scoreboard: ScoreboardHandle = renderScoreboard(scoreboardContainer, players, seriesWins)
     const board: SvgBoardHandle = createSvgBoard(boardWrapper, state.board)
 
     function currentPlayer(): Player {
@@ -216,10 +217,18 @@ export function mountApp(root: HTMLElement): void {
           const outcome = determineOutcome(state.players, state.winnerIds)
           if (outcome === 'win') sound.playGameWon()
           else sound.playGameLost()
-          renderGameOver(overlay, state.players, state.winnerIds, outcome, [
-            { label: 'Rematch', primary: true, onClick: handleRematch },
-            { label: 'New Setup', onClick: handleNewSetup },
-          ])
+          for (const winnerId of state.winnerIds) seriesWins.set(winnerId, (seriesWins.get(winnerId) ?? 0) + 1)
+          renderGameOver(
+            overlay,
+            state.players,
+            state.winnerIds,
+            outcome,
+            [
+              { label: 'Rematch', primary: true, onClick: handleRematch },
+              { label: 'New Setup', onClick: handleNewSetup },
+            ],
+            seriesWins,
+          )
         }, revealDelay)
         return
       }
@@ -249,7 +258,7 @@ export function mountApp(root: HTMLElement): void {
       active = false
       overlay.classList.remove('visible')
       overlay.replaceChildren()
-      startGame(config)
+      startGame(config, seriesWins)
     }
 
     function handleNewSetup(): void {

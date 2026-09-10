@@ -22,12 +22,19 @@ function titleFor(players: Player[], winnerIds: PlayerId[], outcome: GameOutcome
   return `${emoji}${byId.get(winnerIds[0])?.name ?? 'A player'} wins!`
 }
 
+function seriesSummary(players: Player[], seriesWins: Map<PlayerId, number>): string | null {
+  if ([...seriesWins.values()].every((wins) => wins === 0)) return null
+  const ranked = [...players].sort((a, b) => (seriesWins.get(b.id) ?? 0) - (seriesWins.get(a.id) ?? 0))
+  return `Series: ${ranked.map((p) => `${p.name} ${seriesWins.get(p.id) ?? 0}`).join(' · ')}`
+}
+
 export function renderGameOver(
   container: HTMLElement,
   players: Player[],
   winnerIds: PlayerId[],
   outcome: GameOutcome,
   actions: GameOverAction[],
+  seriesWins?: Map<PlayerId, number>,
 ): void {
   const ranked = [...players].sort((a, b) => b.score - a.score)
 
@@ -46,8 +53,11 @@ export function renderGameOver(
     }),
   )
 
+  const summary = seriesWins && seriesSummary(players, seriesWins)
+
   const panel = el('div', { class: `game-over-panel ${outcome}` }, [
     el('h2', {}, [titleFor(players, winnerIds, outcome)]),
+    ...(summary ? [el('p', { class: 'series-summary' }, [summary])] : []),
     scoreList,
     el(
       'div',

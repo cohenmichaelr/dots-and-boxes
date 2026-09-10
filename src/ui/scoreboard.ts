@@ -11,12 +11,18 @@ function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
-export function renderScoreboard(container: HTMLElement, players: Player[]): ScoreboardHandle {
+export function renderScoreboard(
+  container: HTMLElement,
+  players: Player[],
+  seriesWins?: Map<PlayerId, number>,
+): ScoreboardHandle {
   const playersById = new Map<PlayerId, Player>(players.map((p) => [p.id, p]))
   const rowEls = new Map<PlayerId, { row: HTMLElement; scoreEl: HTMLElement }>()
 
   const banner = el('div', { class: 'turn-banner' })
   const rows = el('div', { class: 'scoreboard-rows' })
+
+  const seriesStarted = seriesWins !== undefined && [...seriesWins.values()].some((wins) => wins > 0)
 
   for (const player of players) {
     const swatch = el('span', { class: 'swatch' })
@@ -27,6 +33,10 @@ export function renderScoreboard(container: HTMLElement, players: Player[]): Sco
     const nameParts: Array<Node | string> = [player.name]
     if (player.type === 'computer') {
       nameParts.push(el('span', { class: 'badge' }, [`Computer · ${capitalize(player.difficulty ?? 'medium')}`]))
+    }
+    if (seriesStarted) {
+      const wins = seriesWins!.get(player.id) ?? 0
+      nameParts.push(el('span', { class: 'badge' }, [`Series: ${wins} win${wins === 1 ? '' : 's'}`]))
     }
 
     const row = el('div', { class: 'score-row' }, [swatch, el('span', { class: 'name' }, nameParts), scoreEl])
