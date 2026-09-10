@@ -4,7 +4,6 @@ import type { BoardSize, EdgeId, GameSetupConfig, GameState, Player } from '../g
 import {
   BOX_FILL_DELAY_MS,
   CHAIN_STAGGER_MS,
-  applyBoardColorVars,
   applyPlayerColorVars,
   createSvgBoard,
   playerColorVar,
@@ -14,6 +13,7 @@ import type { SvgBoardHandle } from '../render'
 import { createSoundEngine } from '../sound'
 import { createHostSession, joinRoom } from '../net'
 import type { GuestSession, HostSession, OnlineGameSession, WirePlayer } from '../net'
+import { applyBoardColorVars, resolveTheme, toggleTheme } from '../theme'
 import { el } from './dom'
 import { renderGameOver } from './gameOver'
 import { renderJoinScreen } from './joinRoom'
@@ -45,7 +45,22 @@ export function mountApp(root: HTMLElement): void {
     ['🔊'],
   )
 
-  const header = el('header', { class: 'app-header' }, [el('h1', {}, ['Dots and Boxes']), muteButton])
+  const themeButton = el(
+    'button',
+    {
+      class: 'mute-toggle',
+      title: 'Toggle dark/light theme',
+      ariaLabel: 'Toggle dark/light theme',
+      onClick: () => {
+        const theme = toggleTheme()
+        themeButton.textContent = theme === 'dark' ? '🌙' : '☀️'
+      },
+    },
+    [resolveTheme() === 'dark' ? '🌙' : '☀️'],
+  )
+
+  const headerActions = el('div', { class: 'header-actions' }, [themeButton, muteButton])
+  const header = el('header', { class: 'app-header' }, [el('h1', {}, ['Dots and Boxes']), headerActions])
   const screen = el('div', { class: 'screen' })
   const shell = el('div', { class: 'app-shell' }, [header, screen])
   root.replaceChildren(shell)
@@ -67,16 +82,45 @@ export function mountApp(root: HTMLElement): void {
   // ---------- Mode select ----------
 
   function showModeSelect(): void {
-    screen.replaceChildren(
-      el('div', { class: 'setup-panel' }, [
-        el('h1', {}, ['Dots and Boxes']),
-        el('p', { class: 'setup-subtitle' }, ['How do you want to play?']),
-        el('div', { class: 'game-over-actions' }, [
-          el('button', { class: 'btn primary', onClick: showSetup }, ['Play on this device']),
-          el('button', { class: 'btn secondary', onClick: showOnlineSetup }, ['Play online']),
-        ]),
+    const children = [
+      el('h1', {}, ['Dots and Boxes']),
+      el('p', { class: 'setup-subtitle' }, ['How do you want to play?']),
+      el('div', { class: 'game-over-actions' }, [
+        el('button', { class: 'btn primary', onClick: showSetup }, ['Play on this device']),
+        el('button', { class: 'btn secondary', onClick: showOnlineSetup }, ['Play online']),
       ]),
-    )
+      renderInstructions(),
+    ]
+
+    screen.replaceChildren(el('div', { class: 'setup-panel' }, children))
+  }
+
+  function renderInstructions(): HTMLElement {
+    return el('div', { class: 'instructions' }, [
+      el('h2', {}, ['How to play']),
+      el('p', {}, [
+        'Players take turns drawing one line between two neighboring dots. Tap or click a spot between two dots to draw a line there.',
+      ]),
+      el('p', {}, [
+        'Complete the fourth side of a box and you claim it — it fills with your color, and you immediately get another turn. Chain several boxes together and you keep going until you draw a line that doesn’t finish a box.',
+      ]),
+      el('p', {}, [
+        'When every line on the board is drawn, the game ends. Whoever owns the most boxes wins. Up to 4 players can play, any mix of humans and computer opponents.',
+      ]),
+      el('h2', {}, ['Playing against others']),
+      el('p', {}, [
+        'Choose ',
+        el('strong', {}, ['Play online']),
+        ' to set up a match across multiple devices — no accounts needed. One player hosts, picks a name, color, and any computer opponents, then taps ',
+        el('strong', {}, ['Create Game']),
+        ' to open a lobby with a shareable link.',
+      ]),
+      el('p', {}, [
+        'Send that link to whoever you want to play with — they open it, pick a name and color, and join the lobby automatically. Once everyone has joined, the host taps ',
+        el('strong', {}, ['Start Game']),
+        ' and moves sync live for every player. If the host closes their tab, the match ends.',
+      ]),
+    ])
   }
 
   // ---------- Local hotseat mode (unchanged) ----------
