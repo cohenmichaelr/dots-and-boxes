@@ -178,12 +178,6 @@ button {
   height: 40px;
   font-size: 18px;
   line-height: 1;
-  opacity: 1;
-  transition: opacity 150ms ease;
-}
-
-.mute-toggle.muted {
-  opacity: 0.4;
 }
 
 /* ---------- Setup screen ---------- */

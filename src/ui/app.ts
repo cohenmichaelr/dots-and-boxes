@@ -40,7 +40,6 @@ function determineOutcome(
 export function mountApp(root: HTMLElement): void {
   applyBoardColorVars(document.documentElement)
   const sound = createSoundEngine()
-  document.addEventListener('pointerdown', () => sound.resumeIfNeeded(), { once: true })
 
   const muteButton = el(
     'button',
@@ -57,21 +56,6 @@ export function mountApp(root: HTMLElement): void {
     ['🔊'],
   )
 
-  const musicButton = el(
-    'button',
-    {
-      class: `mute-toggle${sound.isMusicEnabled() ? '' : ' muted'}`,
-      title: 'Toggle background music',
-      ariaLabel: 'Toggle background music',
-      onClick: () => {
-        const nowEnabled = !sound.isMusicEnabled()
-        sound.setMusicEnabled(nowEnabled)
-        musicButton.classList.toggle('muted', !nowEnabled)
-      },
-    },
-    ['🎵'],
-  )
-
   const themeButton = el(
     'button',
     {
@@ -86,7 +70,7 @@ export function mountApp(root: HTMLElement): void {
     [resolveTheme() === 'dark' ? '🌙' : '☀️'],
   )
 
-  const headerActions = el('div', { class: 'header-actions' }, [themeButton, musicButton, muteButton])
+  const headerActions = el('div', { class: 'header-actions' }, [themeButton, muteButton])
   const header = el('header', { class: 'app-header' }, [el('h1', {}, ['Dots and Boxes']), headerActions])
   const screen = el('div', { class: 'screen' })
   const shell = el('div', { class: 'app-shell' }, [header, screen])

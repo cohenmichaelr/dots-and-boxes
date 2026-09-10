@@ -6,8 +6,6 @@ export interface SoundEngine {
   playGameLost(): void
   setMuted(muted: boolean): void
   isMuted(): boolean
-  setMusicEnabled(enabled: boolean): void
-  isMusicEnabled(): boolean
 }
 
 function playTone(
@@ -32,76 +30,26 @@ function playTone(
   oscillator.stop(startTime + durationSec + 0.02)
 }
 
-// A classical-flavored loop built on Pachelbel's Canon chord progression (I-V-vi-iii-IV-I-IV-V,
-// public-domain harmony), with a sustained bass note under a rippling, harpsichord-like arpeggio
-// for each chord. The whole pattern is scheduled ahead of time and re-scheduled just before it loops.
-const CANON_CHORDS: Array<{ bass: number; arpeggio: number[] }> = [
-  { bass: 146.83, arpeggio: [293.66, 369.99, 440.0, 369.99] }, // D
-  { bass: 110.0, arpeggio: [220.0, 277.18, 329.63, 277.18] }, // A
-  { bass: 123.47, arpeggio: [246.94, 293.66, 369.99, 293.66] }, // Bm
-  { bass: 92.5, arpeggio: [185.0, 220.0, 277.18, 220.0] }, // F#m
-  { bass: 98.0, arpeggio: [196.0, 246.94, 293.66, 246.94] }, // G
-  { bass: 146.83, arpeggio: [293.66, 369.99, 440.0, 369.99] }, // D
-  { bass: 98.0, arpeggio: [196.0, 246.94, 293.66, 246.94] }, // G
-  { bass: 110.0, arpeggio: [220.0, 277.18, 329.63, 277.18] }, // A
-]
-const CHORD_DURATION_SEC = 1.8
-const ARPEGGIO_NOTE_SEC = CHORD_DURATION_SEC / 4
-
-function scheduleMusicLoop(ctx: AudioContext, destination: GainNode, startTime: number): number {
-  CANON_CHORDS.forEach((chord, chordIndex) => {
-    const chordStart = startTime + chordIndex * CHORD_DURATION_SEC
-    playTone(ctx, destination, chord.bass, chordStart, CHORD_DURATION_SEC * 0.95, 0.05, 'sine')
-    chord.arpeggio.forEach((freq, noteIndex) => {
-      playTone(ctx, destination, freq, chordStart + noteIndex * ARPEGGIO_NOTE_SEC, ARPEGGIO_NOTE_SEC * 0.9, 0.045, 'triangle')
-    })
-  })
-  return CANON_CHORDS.length * CHORD_DURATION_SEC
-}
-
-/** Web Audio synthesized sound effects and background music, no external audio files. AudioContext is created lazily on first user gesture. */
+/** Web Audio synthesized sound effects, no external audio files. AudioContext is created lazily on first user gesture. */
 export function createSoundEngine(): SoundEngine {
   let ctx: AudioContext | null = null
   let sfxGain: GainNode | null = null
-  let musicGain: GainNode | null = null
   let sfxMuted = false
-  let musicEnabled = true
-  let musicTimeoutId: number | null = null
 
-  function ensureContext(): { ctx: AudioContext; sfxGain: GainNode; musicGain: GainNode } {
+  function ensureContext(): { ctx: AudioContext; sfxGain: GainNode } {
     if (!ctx) {
       ctx = new AudioContext()
       sfxGain = ctx.createGain()
       sfxGain.gain.value = 0.8
       sfxGain.connect(ctx.destination)
-      musicGain = ctx.createGain()
-      musicGain.gain.value = 0.3
-      musicGain.connect(ctx.destination)
     }
-    return { ctx, sfxGain: sfxGain!, musicGain: musicGain! }
-  }
-
-  function stopMusicLoop(): void {
-    if (musicTimeoutId !== null) {
-      window.clearTimeout(musicTimeoutId)
-      musicTimeoutId = null
-    }
-  }
-
-  function runMusicLoop(): void {
-    if (!musicEnabled) return
-    const { ctx, musicGain } = ensureContext()
-    if (ctx.state === 'suspended') void ctx.resume()
-    const startTime = ctx.currentTime + 0.05
-    const loopDurationSec = scheduleMusicLoop(ctx, musicGain, startTime)
-    musicTimeoutId = window.setTimeout(runMusicLoop, Math.max(0, loopDurationSec - 0.5) * 1000)
+    return { ctx, sfxGain: sfxGain! }
   }
 
   return {
     resumeIfNeeded() {
       const { ctx } = ensureContext()
       if (ctx.state === 'suspended') void ctx.resume()
-      if (musicEnabled && musicTimeoutId === null) runMusicLoop()
     },
     playLineDrawn() {
       if (sfxMuted) return
@@ -146,17 +94,6 @@ export function createSoundEngine(): SoundEngine {
     },
     isMuted() {
       return sfxMuted
-    },
-    setMusicEnabled(enabled) {
-      musicEnabled = enabled
-      if (enabled) {
-        runMusicLoop()
-      } else {
-        stopMusicLoop()
-      }
-    },
-    isMusicEnabled() {
-      return musicEnabled
     },
   }
 }
