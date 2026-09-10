@@ -14,8 +14,10 @@ import { createSoundEngine } from '../sound'
 import { createHostSession, joinRoom } from '../net'
 import type { GuestSession, HostSession, OnlineGameSession, WirePlayer } from '../net'
 import { applyBoardColorVars, resolveTheme, toggleTheme } from '../theme'
+import { loadHighScores, recordHighScores } from '../highScores'
 import { el } from './dom'
 import { renderGameOver } from './gameOver'
+import { renderHighScoresScreen } from './highScoresScreen'
 import { renderJoinScreen } from './joinRoom'
 import { renderLobbyScreen } from './lobby'
 import { renderOnlineSetupScreen } from './onlineSetup'
@@ -100,10 +102,16 @@ export function mountApp(root: HTMLElement): void {
         el('button', { class: 'btn primary', onClick: showSetup }, ['Play on this device']),
         el('button', { class: 'btn secondary', onClick: showOnlineSetup }, ['Play online']),
       ]),
+      el('button', { class: 'btn secondary high-scores-link', onClick: showHighScores }, ['🏆 High Scores']),
       renderInstructions(),
     ]
 
     screen.replaceChildren(el('div', { class: 'setup-panel' }, children))
+  }
+
+  function showHighScores(): void {
+    screen.replaceChildren()
+    renderHighScoresScreen(screen, loadHighScores(), showModeSelect)
   }
 
   function renderInstructions(): HTMLElement {
@@ -218,6 +226,14 @@ export function mountApp(root: HTMLElement): void {
           if (outcome === 'win') sound.playGameWon()
           else sound.playGameLost()
           for (const winnerId of state.winnerIds) seriesWins.set(winnerId, (seriesWins.get(winnerId) ?? 0) + 1)
+          recordHighScores(
+            state.players.map((player) => ({
+              name: player.name,
+              score: player.score,
+              boardLabel: config.boardSize.label,
+              achievedAt: Date.now(),
+            })),
+          )
           renderGameOver(
             overlay,
             state.players,
