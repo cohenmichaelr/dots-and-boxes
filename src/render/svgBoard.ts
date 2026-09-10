@@ -85,8 +85,11 @@ export function createSvgBoard(container: HTMLElement, board: Board): SvgBoardHa
     edgeEls.set(edge.id, { visible, hit, length })
   }
 
+  const dotPositions = new Map<DotId, { x: number; y: number }>()
+
   for (const dot of board.dots.values()) {
     const p = dotPoint(dot.row, dot.col)
+    dotPositions.set(dot.id, p)
 
     const visible = svgEl('circle')
     visible.setAttribute('class', 'dot-visible')
@@ -104,12 +107,20 @@ export function createSvgBoard(container: HTMLElement, board: Board): SvgBoardHa
     dotEls.set(dot.id, { visible, hit })
   }
 
+  const dragPreview = svgEl('line')
+  dragPreview.setAttribute('class', 'drag-preview')
+  svg.append(dragPreview)
+
   container.replaceChildren(svg)
 
   const drawn = new Set<EdgeId>()
   let selectedDot: DotId | null = null
   let inputEnabled = true
   let onEdgeSelectCb: ((edgeId: EdgeId) => void) | null = null
+
+  let dragFromDot: DotId | null = null
+  let dragPointerId: number | null = null
+  let dragHoverDot: DotId | null = null
 
   function clearHighlights(): void {
     for (const { visible } of dotEls.values()) visible.classList.remove('legal-target')
@@ -160,10 +171,108 @@ export function createSvgBoard(container: HTMLElement, board: Board): SvgBoardHa
     onEdgeSelectCb?.(edgeId)
   }
 
+  // ---------- Click-and-drag / touch-drag between dots ----------
+
+  function toSvgPoint(clientX: number, clientY: number): { x: number; y: number } | null {
+    const ctm = svg.getScreenCTM()
+    if (!ctm) return null
+    const point = svg.createSVGPoint()
+    point.x = clientX
+    point.y = clientY
+    const local = point.matrixTransform(ctm.inverse())
+    return { x: local.x, y: local.y }
+  }
+
+  /** The undrawn neighbor of `fromDot` closest to `point`, but only once `point` has crossed past the midpoint of that edge. */
+  function nearestLegalNeighbor(fromDot: DotId, point: { x: number; y: number }): DotId | null {
+    let best: DotId | null = null
+    let bestDist = Infinity
+    for (const neighborId of adjacentDots(board, fromDot)) {
+      const edgeId = edgeBetweenDots(board, fromDot, neighborId)
+      if (!edgeId || drawn.has(edgeId)) continue
+      const pos = dotPositions.get(neighborId)
+      if (!pos) continue
+      const dist = Math.hypot(pos.x - point.x, pos.y - point.y)
+      if (dist < bestDist) {
+        bestDist = dist
+        best = neighborId
+      }
+    }
+    if (best === null) return null
+    const startPos = dotPositions.get(fromDot)
+    if (!startPos) return null
+    const distToStart = Math.hypot(startPos.x - point.x, startPos.y - point.y)
+    return bestDist < distToStart ? best : null
+  }
+
+  function setDragHover(dotId: DotId | null): void {
+    if (dragHoverDot === dotId) return
+    if (dragHoverDot) dotEls.get(dragHoverDot)?.visible.classList.remove('drag-hover')
+    dragHoverDot = dotId
+    if (dragHoverDot) dotEls.get(dragHoverDot)?.visible.classList.add('drag-hover')
+  }
+
+  function endDrag(): void {
+    dragFromDot = null
+    dragPointerId = null
+    setDragHover(null)
+    dragPreview.classList.remove('active')
+  }
+
+  function handlePointerMove(event: PointerEvent): void {
+    if (dragFromDot === null || event.pointerId !== dragPointerId) return
+    const point = toSvgPoint(event.clientX, event.clientY)
+    if (!point) return
+    const neighbor = nearestLegalNeighbor(dragFromDot, point)
+    setDragHover(neighbor)
+    const endPoint = neighbor ? dotPositions.get(neighbor)! : point
+    dragPreview.setAttribute('x2', String(endPoint.x))
+    dragPreview.setAttribute('y2', String(endPoint.y))
+  }
+
+  function handlePointerUp(event: PointerEvent): void {
+    if (dragFromDot === null || event.pointerId !== dragPointerId) return
+    const startDot = dragFromDot
+    const targetDot = dragHoverDot
+    endDrag()
+    if (targetDot) {
+      const edgeId = edgeBetweenDots(board, startDot, targetDot)
+      if (edgeId && !drawn.has(edgeId)) {
+        clearSelection()
+        onEdgeSelectCb?.(edgeId)
+      }
+    }
+  }
+
+  function handlePointerCancel(event: PointerEvent): void {
+    if (event.pointerId !== dragPointerId) return
+    endDrag()
+  }
+
+  svg.addEventListener('pointermove', handlePointerMove)
+  svg.addEventListener('pointerup', handlePointerUp)
+  svg.addEventListener('pointercancel', handlePointerCancel)
+
   for (const [dotId, { hit }] of dotEls) {
     hit.addEventListener('pointerdown', (event) => {
+      if (!inputEnabled) return
       event.preventDefault()
       selectDot(dotId)
+      if (selectedDot === dotId) {
+        dragFromDot = dotId
+        dragPointerId = event.pointerId
+        const start = dotPositions.get(dotId)!
+        dragPreview.setAttribute('x1', String(start.x))
+        dragPreview.setAttribute('y1', String(start.y))
+        dragPreview.setAttribute('x2', String(start.x))
+        dragPreview.setAttribute('y2', String(start.y))
+        dragPreview.classList.add('active')
+        try {
+          hit.setPointerCapture(event.pointerId)
+        } catch {
+          // Pointer capture is best-effort; drag still works without it.
+        }
+      }
     })
   }
   for (const [edgeId, { hit }] of edgeEls) {
@@ -195,10 +304,14 @@ export function createSvgBoard(container: HTMLElement, board: Board): SvgBoardHa
     },
     setInputEnabled(enabled) {
       inputEnabled = enabled
-      if (!enabled) clearSelection()
+      if (!enabled) {
+        clearSelection()
+        endDrag()
+      }
     },
     reset() {
       clearSelection()
+      endDrag()
       drawn.clear()
       for (const { visible, length } of edgeEls.values()) {
         visible.style.stroke = ''
