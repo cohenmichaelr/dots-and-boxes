@@ -26,9 +26,21 @@ import { renderSetupScreen } from './setup'
 const AI_MOVE_DELAY_MS = 550
 const GAME_OVER_REVEAL_BUFFER_MS = 250
 
+/** Was "you" (the local player online, or any human in hotseat play) among the winners? */
+function determineOutcome(
+  players: Array<{ id: number; type: 'human' | 'computer' }>,
+  winnerIds: number[],
+  localPlayerId?: number,
+): 'win' | 'lose' {
+  if (localPlayerId !== undefined) return winnerIds.includes(localPlayerId) ? 'win' : 'lose'
+  const winners = players.filter((p) => winnerIds.includes(p.id))
+  return winners.some((p) => p.type === 'human') ? 'win' : 'lose'
+}
+
 export function mountApp(root: HTMLElement): void {
   applyBoardColorVars(document.documentElement)
   const sound = createSoundEngine()
+  document.addEventListener('pointerdown', () => sound.resumeIfNeeded(), { once: true })
 
   const muteButton = el(
     'button',
@@ -45,6 +57,21 @@ export function mountApp(root: HTMLElement): void {
     ['🔊'],
   )
 
+  const musicButton = el(
+    'button',
+    {
+      class: `mute-toggle${sound.isMusicEnabled() ? '' : ' muted'}`,
+      title: 'Toggle background music',
+      ariaLabel: 'Toggle background music',
+      onClick: () => {
+        const nowEnabled = !sound.isMusicEnabled()
+        sound.setMusicEnabled(nowEnabled)
+        musicButton.classList.toggle('muted', !nowEnabled)
+      },
+    },
+    ['🎵'],
+  )
+
   const themeButton = el(
     'button',
     {
@@ -59,7 +86,7 @@ export function mountApp(root: HTMLElement): void {
     [resolveTheme() === 'dark' ? '🌙' : '☀️'],
   )
 
-  const headerActions = el('div', { class: 'header-actions' }, [themeButton, muteButton])
+  const headerActions = el('div', { class: 'header-actions' }, [themeButton, musicButton, muteButton])
   const header = el('header', { class: 'app-header' }, [el('h1', {}, ['Dots and Boxes']), headerActions])
   const screen = el('div', { class: 'screen' })
   const shell = el('div', { class: 'app-shell' }, [header, screen])
@@ -202,8 +229,10 @@ export function mountApp(root: HTMLElement): void {
         board.setInputEnabled(false)
         const revealDelay = BOX_FILL_DELAY_MS + completedBoxIds.length * CHAIN_STAGGER_MS + GAME_OVER_REVEAL_BUFFER_MS
         setTimeout(() => {
-          sound.playGameWon()
-          renderGameOver(overlay, state.players, state.winnerIds, [
+          const outcome = determineOutcome(state.players, state.winnerIds)
+          if (outcome === 'win') sound.playGameWon()
+          else sound.playGameLost()
+          renderGameOver(overlay, state.players, state.winnerIds, outcome, [
             { label: 'Rematch', primary: true, onClick: handleRematch },
             { label: 'New Setup', onClick: handleNewSetup },
           ])
@@ -399,7 +428,8 @@ export function mountApp(root: HTMLElement): void {
     }
 
     function showOnlineGameOver(finalPlayers: WirePlayer[], winnerIds: number[]): void {
-      renderGameOver(overlay, finalPlayers, winnerIds, [
+      const outcome = determineOutcome(finalPlayers, winnerIds, session.localPlayerId)
+      renderGameOver(overlay, finalPlayers, winnerIds, outcome, [
         {
           label: 'Back to Menu',
           primary: true,
@@ -438,7 +468,9 @@ export function mountApp(root: HTMLElement): void {
           board.setInputEnabled(false)
           const revealDelay = BOX_FILL_DELAY_MS + completedBoxIds.length * CHAIN_STAGGER_MS + GAME_OVER_REVEAL_BUFFER_MS
           setTimeout(() => {
-            sound.playGameWon()
+            const outcome = determineOutcome(payload.players, payload.winnerIds, session.localPlayerId)
+            if (outcome === 'win') sound.playGameWon()
+            else sound.playGameLost()
             showOnlineGameOver(payload.players, payload.winnerIds)
           }, revealDelay)
           return

@@ -1,6 +1,9 @@
 import { playerColorVar } from '../render'
 import type { Player, PlayerId } from '../game/types'
 import { el } from './dom'
+import { playFireworks, playSadRain } from './effects'
+
+export type GameOutcome = 'win' | 'lose'
 
 export interface GameOverAction {
   label: string
@@ -8,20 +11,22 @@ export interface GameOverAction {
   onClick: () => void
 }
 
-function titleFor(players: Player[], winnerIds: PlayerId[]): string {
+function titleFor(players: Player[], winnerIds: PlayerId[], outcome: GameOutcome): string {
   const byId = new Map(players.map((p) => [p.id, p]))
-  if (winnerIds.length === players.length) return "It's a tie!"
+  const emoji = outcome === 'win' ? '🎉 ' : '😢 '
+  if (winnerIds.length === players.length) return `${emoji}It's a tie!`
   if (winnerIds.length > 1) {
     const names = winnerIds.map((id) => byId.get(id)?.name ?? 'Player')
-    return `${names.join(' & ')} tie!`
+    return `${emoji}${names.join(' & ')} tie!`
   }
-  return `${byId.get(winnerIds[0])?.name ?? 'A player'} wins!`
+  return `${emoji}${byId.get(winnerIds[0])?.name ?? 'A player'} wins!`
 }
 
 export function renderGameOver(
   container: HTMLElement,
   players: Player[],
   winnerIds: PlayerId[],
+  outcome: GameOutcome,
   actions: GameOverAction[],
 ): void {
   const ranked = [...players].sort((a, b) => b.score - a.score)
@@ -41,8 +46,8 @@ export function renderGameOver(
     }),
   )
 
-  const panel = el('div', { class: 'game-over-panel' }, [
-    el('h2', {}, [titleFor(players, winnerIds)]),
+  const panel = el('div', { class: `game-over-panel ${outcome}` }, [
+    el('h2', {}, [titleFor(players, winnerIds, outcome)]),
     scoreList,
     el(
       'div',
@@ -55,4 +60,7 @@ export function renderGameOver(
 
   container.replaceChildren(panel)
   container.classList.add('visible')
+
+  if (outcome === 'win') playFireworks(container)
+  else playSadRain(container)
 }
