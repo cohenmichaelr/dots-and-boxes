@@ -1,3 +1,110 @@
+:root {
+  color-scheme: light dark;
+
+  --page-bg: #fbf9f5;
+  --page-bg-glow: rgba(201, 162, 39, 0.08);
+  --text: #2b2b33;
+  --text-strong: #1f1f26;
+  --text-muted: #6b6b76;
+  --text-faint: #8a8a93;
+  --text-instructions: #3a3a42;
+
+  --panel-bg: #ffffff;
+  --panel-shadow: rgba(43, 43, 51, 0.08);
+  --panel-shadow-strong: rgba(43, 43, 51, 0.18);
+
+  --surface-tint: rgba(43, 43, 51, 0.06);
+  --surface-tint-soft: rgba(43, 43, 51, 0.03);
+  --border-soft: rgba(43, 43, 51, 0.12);
+  --border-hairline: rgba(43, 43, 51, 0.08);
+
+  --ink: #2b2b33;
+  --ink-contrast: #ffffff;
+
+  --btn-secondary-bg: rgba(43, 43, 51, 0.08);
+  --btn-secondary-text: #2b2b33;
+
+  --error: #b3261e;
+
+  --accent: #c9a227;
+  --accent-soft: rgba(201, 162, 39, 0.12);
+  --accent-soft-strong: rgba(201, 162, 39, 0.15);
+  --accent-ring: rgba(201, 162, 39, 0.5);
+
+  --overlay-bg: rgba(251, 249, 245, 0.85);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --page-bg: #1c1c22;
+    --page-bg-glow: rgba(224, 184, 74, 0.05);
+    --text: #e8e6f0;
+    --text-strong: #f5f4fa;
+    --text-muted: #a5a3b0;
+    --text-faint: #8b8996;
+    --text-instructions: #cfcdd8;
+
+    --panel-bg: #26262f;
+    --panel-shadow: rgba(0, 0, 0, 0.35);
+    --panel-shadow-strong: rgba(0, 0, 0, 0.5);
+
+    --surface-tint: rgba(232, 230, 240, 0.08);
+    --surface-tint-soft: rgba(232, 230, 240, 0.04);
+    --border-soft: rgba(232, 230, 240, 0.16);
+    --border-hairline: rgba(232, 230, 240, 0.1);
+
+    --ink: #f0eff5;
+    --ink-contrast: #1c1c22;
+
+    --btn-secondary-bg: rgba(232, 230, 240, 0.1);
+    --btn-secondary-text: #e8e6f0;
+
+    --error: #ff6b6b;
+
+    --accent: #e0b84a;
+    --accent-soft: rgba(224, 184, 74, 0.18);
+    --accent-soft-strong: rgba(224, 184, 74, 0.22);
+    --accent-ring: rgba(224, 184, 74, 0.55);
+
+    --overlay-bg: rgba(28, 28, 34, 0.85);
+  }
+}
+
+/* Explicit toggle wins over the OS setting in both directions. */
+:root[data-theme='dark'] {
+  --page-bg: #1c1c22;
+  --page-bg-glow: rgba(224, 184, 74, 0.05);
+  --text: #e8e6f0;
+  --text-strong: #f5f4fa;
+  --text-muted: #a5a3b0;
+  --text-faint: #8b8996;
+  --text-instructions: #cfcdd8;
+
+  --panel-bg: #26262f;
+  --panel-shadow: rgba(0, 0, 0, 0.35);
+  --panel-shadow-strong: rgba(0, 0, 0, 0.5);
+
+  --surface-tint: rgba(232, 230, 240, 0.08);
+  --surface-tint-soft: rgba(232, 230, 240, 0.04);
+  --border-soft: rgba(232, 230, 240, 0.16);
+  --border-hairline: rgba(232, 230, 240, 0.1);
+
+  --ink: #f0eff5;
+  --ink-contrast: #1c1c22;
+
+  --btn-secondary-bg: rgba(232, 230, 240, 0.1);
+  --btn-secondary-text: #e8e6f0;
+
+  --error: #ff6b6b;
+
+  --accent: #e0b84a;
+  --accent-soft: rgba(224, 184, 74, 0.18);
+  --accent-soft-strong: rgba(224, 184, 74, 0.22);
+  --accent-ring: rgba(224, 184, 74, 0.55);
+
+  --overlay-bg: rgba(28, 28, 34, 0.85);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -9,9 +116,9 @@ body {
 }
 
 body {
-  background: var(--board-bg, #fbf9f5);
-  background-image: radial-gradient(circle at 50% 0%, rgba(201, 162, 39, 0.08), transparent 55%);
-  color: #2b2b33;
+  background: var(--page-bg);
+  background-image: radial-gradient(circle at 50% 0%, var(--page-bg-glow), transparent 55%);
+  color: var(--text);
   font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
@@ -44,12 +151,17 @@ button {
 
 .app-header h1 {
   font-size: clamp(22px, 4vw, 30px);
-  color: #1f1f26;
+  color: var(--text-strong);
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .mute-toggle {
   border: none;
-  background: rgba(43, 43, 51, 0.06);
+  background: var(--surface-tint);
   border-radius: 999px;
   width: 40px;
   height: 40px;
@@ -60,20 +172,20 @@ button {
 /* ---------- Setup screen ---------- */
 
 .setup-panel {
-  background: #ffffff;
+  background: var(--panel-bg);
   border-radius: 20px;
   padding: 28px;
-  box-shadow: 0 12px 40px rgba(43, 43, 51, 0.08);
+  box-shadow: 0 12px 40px var(--panel-shadow);
 }
 
 .setup-subtitle {
-  color: #6b6b76;
+  color: var(--text-muted);
   margin: 6px 0 24px;
 }
 
 .setup-panel h2 {
   font-size: 16px;
-  color: #6b6b76;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin: 24px 0 10px;
@@ -81,7 +193,7 @@ button {
 
 .segmented {
   display: inline-flex;
-  background: rgba(43, 43, 51, 0.06);
+  background: var(--surface-tint);
   border-radius: 12px;
   padding: 4px;
   gap: 4px;
@@ -97,7 +209,7 @@ button {
   border-radius: 9px;
   padding: 8px 16px;
   font-size: 14px;
-  color: #5a5a64;
+  color: var(--text-muted);
   transition: background 150ms ease, color 150ms ease;
 }
 
@@ -107,8 +219,8 @@ button {
 }
 
 .segmented-btn.active {
-  background: #2b2b33;
-  color: #ffffff;
+  background: var(--ink);
+  color: var(--ink-contrast);
 }
 
 .player-rows {
@@ -122,7 +234,7 @@ button {
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
-  background: rgba(43, 43, 51, 0.03);
+  background: var(--surface-tint-soft);
   border-radius: 14px;
   padding: 10px 12px;
 }
@@ -130,19 +242,21 @@ button {
 .name-input {
   flex: 1 1 140px;
   min-width: 100px;
-  border: 1px solid rgba(43, 43, 51, 0.12);
+  border: 1px solid var(--border-soft);
   border-radius: 10px;
   padding: 9px 12px;
   font-size: 14px;
-  background: #fff;
+  background: var(--panel-bg);
+  color: var(--text);
 }
 
 .difficulty-select {
-  border: 1px solid rgba(43, 43, 51, 0.12);
+  border: 1px solid var(--border-soft);
   border-radius: 10px;
   padding: 8px 10px;
   font-size: 14px;
-  background: #fff;
+  background: var(--panel-bg);
+  color: var(--text);
 }
 
 .swatch-picker {
@@ -159,7 +273,7 @@ button {
 }
 
 .swatch-btn.selected {
-  border-color: #2b2b33;
+  border-color: var(--ink);
   transform: scale(1.1);
 }
 
@@ -169,7 +283,7 @@ button {
 }
 
 .setup-errors {
-  color: #b3261e;
+  color: var(--error);
   font-size: 14px;
   margin: 16px 0 0;
   padding-left: 20px;
@@ -184,13 +298,13 @@ button {
 }
 
 .btn.primary {
-  background: #2b2b33;
-  color: #fff;
+  background: var(--ink);
+  color: var(--ink-contrast);
 }
 
 .btn.secondary {
-  background: rgba(43, 43, 51, 0.08);
-  color: #2b2b33;
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
 }
 
 .start-btn {
@@ -198,12 +312,37 @@ button {
   width: 100%;
 }
 
+.instructions {
+  margin-top: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-hairline);
+}
+
+.instructions h2 {
+  font-size: 16px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 20px 0 8px;
+}
+
+.instructions h2:first-child {
+  margin-top: 0;
+}
+
+.instructions p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-instructions);
+}
+
 .room-link-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
-  background: rgba(43, 43, 51, 0.03);
+  background: var(--surface-tint-soft);
   border-radius: 14px;
   padding: 10px 12px;
   margin-top: 8px;
@@ -212,7 +351,7 @@ button {
 .room-link-text {
   flex: 1 1 200px;
   font-size: 13px;
-  color: #2b2b33;
+  color: var(--text);
   word-break: break-all;
   background: none;
 }
@@ -239,16 +378,16 @@ button {
 }
 
 .scoreboard-container {
-  background: #ffffff;
+  background: var(--panel-bg);
   border-radius: 18px;
   padding: 18px;
-  box-shadow: 0 12px 40px rgba(43, 43, 51, 0.08);
+  box-shadow: 0 12px 40px var(--panel-shadow);
 }
 
 .turn-banner {
   font-size: 14px;
   font-weight: 600;
-  color: #6b6b76;
+  color: var(--text-muted);
   margin-bottom: 14px;
   min-height: 18px;
 }
@@ -269,8 +408,8 @@ button {
 }
 
 .score-row.active {
-  background: rgba(201, 162, 39, 0.12);
-  box-shadow: inset 0 0 0 1.5px rgba(201, 162, 39, 0.5);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1.5px var(--accent-ring);
 }
 
 .score-row .swatch {
@@ -289,7 +428,7 @@ button {
 
 .score-row .badge {
   font-size: 11px;
-  color: #8a8a93;
+  color: var(--text-faint);
 }
 
 .score-row .score {
@@ -325,7 +464,7 @@ button {
 }
 
 .edge-visible {
-  stroke: var(--line-guide-color, rgba(43, 43, 51, 0.16));
+  stroke: var(--line-guide-color);
   stroke-width: 2;
   stroke-linecap: round;
   transition: stroke-dashoffset 190ms ease-out, stroke 190ms ease-out, stroke-width 190ms ease-out;
@@ -343,23 +482,40 @@ button {
 }
 
 .dot-visible {
-  fill: var(--dot-color, #2b2b33);
+  fill: var(--dot-color);
   transition: fill 150ms ease-out, r 150ms ease-out;
 }
 
 .dot-visible.selected {
-  fill: var(--selected-color, #c9a227);
+  fill: var(--selected-color);
   r: 8;
 }
 
 .dot-visible.legal-target {
-  fill: var(--highlight-color, rgba(201, 162, 39, 0.35));
+  fill: var(--highlight-color);
   r: 7;
+}
+
+.dot-visible.drag-hover {
+  fill: var(--selected-color);
+  r: 8;
 }
 
 .dot-hit {
   fill: rgba(0, 0, 0, 0.001);
   cursor: pointer;
+}
+
+.drag-preview {
+  stroke: var(--selected-color);
+  stroke-width: 4;
+  stroke-linecap: round;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.drag-preview.active {
+  opacity: 1;
 }
 
 /* ---------- Game over overlay ---------- */
@@ -370,7 +526,7 @@ button {
   inset: 0;
   align-items: center;
   justify-content: center;
-  background: rgba(251, 249, 245, 0.85);
+  background: var(--overlay-bg);
   backdrop-filter: blur(4px);
   border-radius: 20px;
 }
@@ -380,10 +536,10 @@ button {
 }
 
 .game-over-panel {
-  background: #ffffff;
+  background: var(--panel-bg);
   border-radius: 20px;
   padding: 28px 32px;
-  box-shadow: 0 20px 60px rgba(43, 43, 51, 0.18);
+  box-shadow: 0 20px 60px var(--panel-shadow-strong);
   text-align: center;
   min-width: 260px;
 }
@@ -409,7 +565,7 @@ button {
 }
 
 .final-score-row.winner {
-  background: rgba(201, 162, 39, 0.15);
+  background: var(--accent-soft-strong);
   font-weight: 700;
 }
 
