@@ -25,8 +25,8 @@ export function renderScoreboard(
   const seriesStarted = seriesWins !== undefined && [...seriesWins.values()].some((wins) => wins > 0)
 
   for (const player of players) {
-    const swatch = el('span', { class: 'swatch' })
-    swatch.style.backgroundColor = playerColorVar(player.id)
+    const avatarBadge = el('span', { class: 'avatar-badge' }, [player.avatar])
+    avatarBadge.style.backgroundColor = playerColorVar(player.id)
 
     const scoreEl = el('span', { class: 'score' }, [String(player.score)])
 
@@ -39,7 +39,7 @@ export function renderScoreboard(
       nameParts.push(el('span', { class: 'badge' }, [`Series: ${wins} win${wins === 1 ? '' : 's'}`]))
     }
 
-    const row = el('div', { class: 'score-row' }, [swatch, el('span', { class: 'name' }, nameParts), scoreEl])
+    const row = el('div', { class: 'score-row' }, [avatarBadge, el('span', { class: 'name' }, nameParts), scoreEl])
     rows.append(row)
     rowEls.set(player.id, { row, scoreEl })
   }

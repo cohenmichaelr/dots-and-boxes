@@ -26,6 +26,12 @@ export interface SvgBoardHandle {
   reset(): void
 }
 
+const SHINE_GRADIENT_ID = 'box-shine-gradient'
+const SPARKS_PER_BOX = 8
+const SPARK_DISTANCE_MIN = 10
+const SPARK_DISTANCE_MAX = 22
+const SPARK_LIFETIME_MS = 550
+
 export function createSvgBoard(container: HTMLElement, board: Board): SvgBoardHandle {
   const width = PADDING * 2 + board.size.cols * CELL_UNIT
   const height = PADDING * 2 + board.size.rows * CELL_UNIT
@@ -36,25 +42,60 @@ export function createSvgBoard(container: HTMLElement, board: Board): SvgBoardHa
   svg.setAttribute('role', 'img')
   svg.setAttribute('aria-label', 'Dots and Boxes board')
 
+  const defs = svgEl('defs')
+  const shineGradient = svgEl('radialGradient')
+  shineGradient.setAttribute('id', SHINE_GRADIENT_ID)
+  shineGradient.setAttribute('cx', '30%')
+  shineGradient.setAttribute('cy', '25%')
+  shineGradient.setAttribute('r', '85%')
+  const shineStopA = svgEl('stop')
+  shineStopA.setAttribute('offset', '0%')
+  shineStopA.setAttribute('stop-color', 'white')
+  shineStopA.setAttribute('stop-opacity', '0.85')
+  const shineStopB = svgEl('stop')
+  shineStopB.setAttribute('offset', '70%')
+  shineStopB.setAttribute('stop-color', 'white')
+  shineStopB.setAttribute('stop-opacity', '0')
+  shineGradient.append(shineStopA, shineStopB)
+  defs.append(shineGradient)
+
   const boxesGroup = svgEl('g')
   const edgesGroup = svgEl('g')
   const dotsGroup = svgEl('g')
-  svg.append(boxesGroup, edgesGroup, dotsGroup)
+  const sparksGroup = svgEl('g')
+  sparksGroup.setAttribute('class', 'sparks-group')
+  svg.append(defs, boxesGroup, edgesGroup, dotsGroup, sparksGroup)
 
-  const boxEls = new Map<BoxId, SVGRectElement>()
+  const boxEls = new Map<BoxId, { fill: SVGRectElement; shine: SVGRectElement }>()
+  const boxCenters = new Map<BoxId, { x: number; y: number }>()
   const edgeEls = new Map<EdgeId, { visible: SVGLineElement; hit: SVGLineElement; length: number }>()
   const dotEls = new Map<DotId, { visible: SVGCircleElement; hit: SVGCircleElement }>()
 
   for (const box of board.boxes.values()) {
-    const rect = svgEl('rect')
-    rect.setAttribute('class', 'box')
-    rect.setAttribute('x', String(PADDING + box.col * CELL_UNIT + BOX_INSET))
-    rect.setAttribute('y', String(PADDING + box.row * CELL_UNIT + BOX_INSET))
-    rect.setAttribute('width', String(CELL_UNIT - BOX_INSET * 2))
-    rect.setAttribute('height', String(CELL_UNIT - BOX_INSET * 2))
-    rect.setAttribute('rx', '8')
-    boxesGroup.appendChild(rect)
-    boxEls.set(box.id, rect)
+    const x = PADDING + box.col * CELL_UNIT + BOX_INSET
+    const y = PADDING + box.row * CELL_UNIT + BOX_INSET
+    const size = CELL_UNIT - BOX_INSET * 2
+    boxCenters.set(box.id, { x: x + size / 2, y: y + size / 2 })
+
+    const fill = svgEl('rect')
+    fill.setAttribute('class', 'box')
+    fill.setAttribute('x', String(x))
+    fill.setAttribute('y', String(y))
+    fill.setAttribute('width', String(size))
+    fill.setAttribute('height', String(size))
+    fill.setAttribute('rx', '8')
+
+    const shine = svgEl('rect')
+    shine.setAttribute('class', 'box-shine')
+    shine.setAttribute('x', String(x))
+    shine.setAttribute('y', String(y))
+    shine.setAttribute('width', String(size))
+    shine.setAttribute('height', String(size))
+    shine.setAttribute('rx', '8')
+    shine.setAttribute('fill', `url(#${SHINE_GRADIENT_ID})`)
+
+    boxesGroup.append(fill, shine)
+    boxEls.set(box.id, { fill, shine })
   }
 
   for (const edge of board.edges.values()) {
@@ -169,6 +210,25 @@ export function createSvgBoard(container: HTMLElement, board: Board): SvgBoardHa
     if (!inputEnabled || drawn.has(edgeId)) return
     clearSelection()
     onEdgeSelectCb?.(edgeId)
+  }
+
+  function spawnSparkBurst(boxId: BoxId, color: string): void {
+    const center = boxCenters.get(boxId)
+    if (!center) return
+    for (let i = 0; i < SPARKS_PER_BOX; i++) {
+      const angle = (i / SPARKS_PER_BOX) * Math.PI * 2 + Math.random() * 0.5
+      const distance = SPARK_DISTANCE_MIN + Math.random() * (SPARK_DISTANCE_MAX - SPARK_DISTANCE_MIN)
+      const spark = svgEl('circle')
+      spark.setAttribute('class', 'box-spark')
+      spark.setAttribute('r', '2.5')
+      spark.style.setProperty('--start-x', String(center.x))
+      spark.style.setProperty('--start-y', String(center.y))
+      spark.style.setProperty('--end-x', String(center.x + Math.cos(angle) * distance))
+      spark.style.setProperty('--end-y', String(center.y + Math.sin(angle) * distance))
+      spark.style.fill = color
+      sparksGroup.append(spark)
+      setTimeout(() => spark.remove(), SPARK_LIFETIME_MS)
+    }
   }
 
   // ---------- Click-and-drag / touch-drag between dots ----------
@@ -297,10 +357,12 @@ export function createSvgBoard(container: HTMLElement, board: Board): SvgBoardHa
       els.hit.classList.add('drawn')
     },
     markBoxOwned(boxId, color) {
-      const rect = boxEls.get(boxId)
-      if (!rect) return
-      rect.style.fill = color
-      rect.classList.add('owned')
+      const box = boxEls.get(boxId)
+      if (!box) return
+      box.fill.style.fill = color
+      box.fill.classList.add('owned')
+      box.shine.classList.add('owned')
+      spawnSparkBurst(boxId, color)
     },
     setInputEnabled(enabled) {
       inputEnabled = enabled
@@ -319,10 +381,12 @@ export function createSvgBoard(container: HTMLElement, board: Board): SvgBoardHa
         visible.style.strokeDashoffset = String(length)
       }
       for (const { hit } of edgeEls.values()) hit.classList.remove('drawn')
-      for (const rect of boxEls.values()) {
-        rect.classList.remove('owned')
-        rect.style.fill = ''
+      for (const box of boxEls.values()) {
+        box.fill.classList.remove('owned')
+        box.fill.style.fill = ''
+        box.shine.classList.remove('owned')
       }
+      sparksGroup.replaceChildren()
     },
   }
 }

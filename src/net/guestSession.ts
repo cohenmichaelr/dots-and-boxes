@@ -9,7 +9,7 @@ export interface GuestSession extends OnlineGameSession {
   onHostDisconnected(cb: () => void): void
 }
 
-export function joinRoom(code: string, name: string, color: string): Promise<GuestSession> {
+export function joinRoom(code: string, name: string, color: string, avatar: string): Promise<GuestSession> {
   return connectAsGuest(code).then(
     ({ peer, connection }) =>
       new Promise<GuestSession>((resolve, reject) => {
@@ -95,7 +95,7 @@ export function joinRoom(code: string, name: string, color: string): Promise<Gue
           else reject(new Error('Connection to the host closed before joining finished.'))
         })
 
-        send({ type: 'join', name, color })
+        send({ type: 'join', name, color, avatar })
       }),
   )
 }

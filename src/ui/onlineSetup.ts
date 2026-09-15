@@ -1,4 +1,4 @@
-import { BOARD_SIZES, DEFAULT_COLORS } from '../game'
+import { AVATARS, BOARD_SIZES, DEFAULT_COLORS } from '../game'
 import type { AiDifficulty, BoardSize } from '../game/types'
 import type { WireAiSlot } from '../net'
 import { el } from './dom'
@@ -7,6 +7,7 @@ export interface OnlineSetupConfig {
   boardSize: BoardSize
   hostName: string
   hostColor: string
+  hostAvatar: string
   aiSlots: WireAiSlot[]
 }
 
@@ -16,6 +17,24 @@ function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
+function avatarPicker(selected: string, onSelect: (avatar: string) => void): HTMLElement {
+  return el(
+    'div',
+    { class: 'avatar-picker' },
+    AVATARS.map((avatar) =>
+      el(
+        'button',
+        {
+          class: `avatar-btn${selected === avatar ? ' selected' : ''}`,
+          ariaLabel: `Avatar ${avatar}`,
+          onClick: () => onSelect(avatar),
+        },
+        [avatar],
+      ),
+    ),
+  )
+}
+
 export function renderOnlineSetupScreen(
   container: HTMLElement,
   onCreate: (config: OnlineSetupConfig) => void,
@@ -23,6 +42,7 @@ export function renderOnlineSetupScreen(
 ): void {
   let hostName = ''
   let hostColor = DEFAULT_COLORS[0]
+  let hostAvatar = AVATARS[0]
   let boardSizeIndex = 1
   const aiSlots: WireAiSlot[] = []
 
@@ -64,7 +84,14 @@ export function renderOnlineSetupScreen(
       }),
     )
 
-    const hostRow = el('div', { class: 'player-row' }, [nameInput, hostSwatches])
+    const hostRow = el('div', { class: 'player-row' }, [
+      nameInput,
+      hostSwatches,
+      avatarPicker(hostAvatar, (avatar) => {
+        hostAvatar = avatar
+        render()
+      }),
+    ])
 
     const aiRows = aiSlots.map((slot, index) => {
       const difficultySelect = el(
@@ -120,6 +147,10 @@ export function renderOnlineSetupScreen(
         el('span', { class: 'name' }, [`Computer ${index + 1}`]),
         difficultySelect,
         swatches,
+        avatarPicker(slot.avatar, (avatar) => {
+          slot.avatar = avatar
+          render()
+        }),
         removeButton,
       ])
     })
@@ -130,7 +161,7 @@ export function renderOnlineSetupScreen(
         class: 'btn secondary',
         disabled: aiSlots.length + 1 >= 4,
         onClick: () => {
-          aiSlots.push({ difficulty: 'medium', color: firstFreeColor() })
+          aiSlots.push({ difficulty: 'medium', color: firstFreeColor(), avatar: AVATARS[aiSlots.length % AVATARS.length] })
           render()
         },
       },
@@ -164,6 +195,7 @@ export function renderOnlineSetupScreen(
             boardSize: BOARD_SIZES[boardSizeIndex],
             hostName: hostName.trim() || 'Player 1',
             hostColor,
+            hostAvatar,
             aiSlots,
           })
         },

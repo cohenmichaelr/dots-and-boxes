@@ -322,6 +322,29 @@ button {
   cursor: not-allowed;
 }
 
+.avatar-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.avatar-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  padding: 0;
+  background: var(--surface-tint);
+  font-size: 15px;
+  line-height: 1;
+}
+
+.avatar-btn.selected {
+  border-color: var(--ink);
+  background: var(--accent-soft);
+  transform: scale(1.1);
+}
+
 .setup-errors {
   color: var(--error);
   font-size: 14px;
@@ -499,11 +522,17 @@ button {
   box-shadow: inset 0 0 0 1.5px var(--accent-ring);
 }
 
-.score-row .swatch {
-  width: 14px;
-  height: 14px;
+.avatar-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
+  font-size: 15px;
+  line-height: 1;
   flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
 }
 
 .score-row .name {
@@ -554,6 +583,38 @@ button {
 
 .box.owned {
   fill-opacity: 0.55;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+}
+
+.box-shine {
+  fill-opacity: 0;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+  transition: fill-opacity 320ms ease-out;
+}
+
+.box-shine.owned {
+  fill-opacity: 0.9;
+}
+
+.sparks-group {
+  pointer-events: none;
+}
+
+.box-spark {
+  cx: var(--start-x);
+  cy: var(--start-y);
+  opacity: 1;
+  animation: box-spark-burst 550ms ease-out forwards;
+}
+
+@keyframes box-spark-burst {
+  to {
+    cx: var(--end-x);
+    cy: var(--end-y);
+    r: 0.5px;
+    opacity: 0;
+  }
 }
 
 .edge-visible {
@@ -765,12 +826,6 @@ button {
 .final-score-row.winner {
   background: var(--accent-soft-strong);
   font-weight: 700;
-}
-
-.final-score-row .swatch {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
 }
 
 .final-score-row .name {

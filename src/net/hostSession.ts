@@ -23,6 +23,7 @@ export interface HostSessionConfig {
   boardSize: BoardSize
   hostName: string
   hostColor: string
+  hostAvatar: string
   aiSlots: WireAiSlot[]
 }
 
@@ -39,6 +40,7 @@ interface Participant {
   playerId: PlayerId
   name: string
   color: string
+  avatar: string
   isHost: boolean
 }
 
@@ -49,6 +51,7 @@ function toWirePlayer(player: Player): WirePlayer {
     type: player.type,
     difficulty: player.difficulty,
     color: player.color,
+    avatar: player.avatar,
     score: player.score,
   }
 }
@@ -57,7 +60,7 @@ export async function createHostSession(config: HostSessionConfig): Promise<Host
   const { peer, code } = await createHostPeer()
 
   const participants: Participant[] = [
-    { connection: null, playerId: 0, name: config.hostName, color: config.hostColor, isHost: true },
+    { connection: null, playerId: 0, name: config.hostName, color: config.hostColor, avatar: config.hostAvatar, isHost: true },
   ]
   let nextPlayerId = 1
   let state: GameState | null = null
@@ -87,6 +90,7 @@ export async function createHostSession(config: HostSessionConfig): Promise<Host
         playerId: p.playerId,
         name: p.name,
         color: p.color,
+        avatar: p.avatar,
         isHost: p.isHost,
       })),
     }
@@ -157,6 +161,7 @@ export async function createHostSession(config: HostSessionConfig): Promise<Host
         playerId,
         name: message.name.trim() || `Player ${playerId + 1}`,
         color: message.color,
+        avatar: message.avatar,
         isHost: false,
       })
       send(connection, { type: 'joinAck', ok: true, playerId })
@@ -209,9 +214,15 @@ export async function createHostSession(config: HostSessionConfig): Promise<Host
     startGame() {
       if (state || totalSlots() < 2) return
       const configs: PlayerSetupConfig[] = [
-        ...participants.map((p): PlayerSetupConfig => ({ name: p.name, type: 'human', color: p.color })),
+        ...participants.map((p): PlayerSetupConfig => ({ name: p.name, type: 'human', color: p.color, avatar: p.avatar })),
         ...config.aiSlots.map(
-          (a): PlayerSetupConfig => ({ name: 'Computer', type: 'computer', difficulty: a.difficulty, color: a.color }),
+          (a): PlayerSetupConfig => ({
+            name: 'Computer',
+            type: 'computer',
+            difficulty: a.difficulty,
+            color: a.color,
+            avatar: a.avatar,
+          }),
         ),
       ]
       const players = createPlayers(configs)

@@ -1,9 +1,10 @@
-import { DEFAULT_COLORS } from '../game'
+import { AVATARS, DEFAULT_COLORS } from '../game'
 import { el } from './dom'
 
 export interface JoinFormResult {
   name: string
   color: string
+  avatar: string
 }
 
 export interface JoinScreenHandle {
@@ -19,6 +20,7 @@ export function renderJoinScreen(
 ): JoinScreenHandle {
   let name = ''
   let color = DEFAULT_COLORS[0]
+  let avatar = AVATARS[0]
   let errorMessage: string | null = null
   let busy = false
 
@@ -49,6 +51,25 @@ export function renderJoinScreen(
       }),
     )
 
+    const avatarPicker = el(
+      'div',
+      { class: 'avatar-picker' },
+      AVATARS.map((a) =>
+        el(
+          'button',
+          {
+            class: `avatar-btn${avatar === a ? ' selected' : ''}`,
+            ariaLabel: `Avatar ${a}`,
+            onClick: () => {
+              avatar = a
+              render()
+            },
+          },
+          [a],
+        ),
+      ),
+    )
+
     const errorEl = errorMessage ? el('ul', { class: 'setup-errors' }, [el('li', {}, [errorMessage])]) : null
 
     const joinButton = el(
@@ -56,7 +77,7 @@ export function renderJoinScreen(
       {
         class: 'btn primary',
         disabled: busy,
-        onClick: () => onJoin({ name: name.trim() || 'Player', color }),
+        onClick: () => onJoin({ name: name.trim() || 'Player', color, avatar }),
       },
       [busy ? 'Joining...' : 'Join Game'],
     )
@@ -65,7 +86,7 @@ export function renderJoinScreen(
     const children: HTMLElement[] = [
       el('h1', {}, ['Join Game']),
       el('p', { class: 'setup-subtitle' }, [`Joining room ${code}`]),
-      el('div', { class: 'player-row' }, [nameInput, swatches]),
+      el('div', { class: 'player-row' }, [nameInput, swatches, avatarPicker]),
     ]
     if (errorEl) children.push(errorEl)
     children.push(el('div', { class: 'game-over-actions' }, [cancelButton, joinButton]))

@@ -4,12 +4,14 @@ export interface WireParticipant {
   playerId: PlayerId
   name: string
   color: string
+  avatar: string
   isHost: boolean
 }
 
 export interface WireAiSlot {
   difficulty: AiDifficulty
   color: string
+  avatar: string
 }
 
 export interface WirePlayer {
@@ -18,6 +20,7 @@ export interface WirePlayer {
   type: PlayerType
   difficulty?: AiDifficulty
   color: string
+  avatar: string
   score: number
 }
 
@@ -44,7 +47,7 @@ export interface StatePayload {
 }
 
 export type GuestToHostMessage =
-  | { type: 'join'; name: string; color: string }
+  | { type: 'join'; name: string; color: string; avatar: string }
   | { type: 'move'; edgeId: EdgeId }
 
 export type HostToGuestMessage =

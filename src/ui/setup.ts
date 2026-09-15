@@ -1,4 +1,4 @@
-import { BOARD_SIZES, DEFAULT_COLORS } from '../game'
+import { AVATARS, BOARD_SIZES, DEFAULT_COLORS } from '../game'
 import type { AiDifficulty, BoardSize, GameSetupConfig, PlayerSetupConfig, PlayerType } from '../game/types'
 import { el } from './dom'
 
@@ -7,16 +7,17 @@ interface RowState {
   type: PlayerType
   difficulty: AiDifficulty
   color: string
+  avatar: string
 }
 
 const DIFFICULTIES: AiDifficulty[] = ['easy', 'medium', 'hard']
 
 function defaultRows(): RowState[] {
   return [
-    { name: 'Player 1', type: 'human', difficulty: 'medium', color: DEFAULT_COLORS[0] },
-    { name: 'Player 2', type: 'human', difficulty: 'medium', color: DEFAULT_COLORS[1] },
-    { name: 'Computer 3', type: 'computer', difficulty: 'medium', color: DEFAULT_COLORS[2] },
-    { name: 'Computer 4', type: 'computer', difficulty: 'medium', color: DEFAULT_COLORS[3] },
+    { name: 'Player 1', type: 'human', difficulty: 'medium', color: DEFAULT_COLORS[0], avatar: AVATARS[0] },
+    { name: 'Player 2', type: 'human', difficulty: 'medium', color: DEFAULT_COLORS[1], avatar: AVATARS[1] },
+    { name: 'Computer 3', type: 'computer', difficulty: 'medium', color: DEFAULT_COLORS[2], avatar: AVATARS[2] },
+    { name: 'Computer 4', type: 'computer', difficulty: 'medium', color: DEFAULT_COLORS[3], avatar: AVATARS[3] },
   ]
 }
 
@@ -44,6 +45,7 @@ export function renderSetupScreen(container: HTMLElement, onStart: (config: Game
       type: row.type,
       difficulty: row.type === 'computer' ? row.difficulty : undefined,
       color: row.color,
+      avatar: row.avatar,
     }))
     return { players, boardSize: BOARD_SIZES[boardSizeIndex] }
   }
@@ -211,11 +213,31 @@ export function renderSetupScreen(container: HTMLElement, onStart: (config: Game
       }),
     )
 
+    const avatarPicker = el(
+      'div',
+      { class: 'avatar-picker' },
+      AVATARS.map((avatar) =>
+        el(
+          'button',
+          {
+            class: `avatar-btn${row.avatar === avatar ? ' selected' : ''}`,
+            ariaLabel: `Avatar ${avatar}`,
+            onClick: () => {
+              row.avatar = avatar
+              render()
+            },
+          },
+          [avatar],
+        ),
+      ),
+    )
+
     return el('div', { class: 'player-row' }, [
       nameInput,
       typeToggle,
       ...(difficultySelect ? [difficultySelect] : []),
       swatches,
+      avatarPicker,
     ])
   }
 

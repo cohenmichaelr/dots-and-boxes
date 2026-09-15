@@ -19,4 +19,4 @@ export {
   playTurn,
 } from './gameState'
 export type { MoveResult } from './gameState'
-export { DEFAULT_COLORS, createPlayers } from './players'
+export { DEFAULT_COLORS, AVATARS, createPlayers } from './players'

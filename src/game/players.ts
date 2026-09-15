@@ -1,6 +1,7 @@
 import type { Player, PlayerSetupConfig } from './types'
 
 export const DEFAULT_COLORS: string[] = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b']
+export const AVATARS: string[] = ['🦊', '🐱', '🐶', '🐼', '🦁', '🐯', '🐸', '🐵']
 
 export function createPlayers(configs: PlayerSetupConfig[]): Player[] {
   return configs.map((config, index) => ({
@@ -9,6 +10,7 @@ export function createPlayers(configs: PlayerSetupConfig[]): Player[] {
     type: config.type,
     difficulty: config.difficulty,
     color: config.color,
+    avatar: config.avatar,
     score: 0,
   }))
 }

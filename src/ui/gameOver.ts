@@ -42,11 +42,11 @@ export function renderGameOver(
     'div',
     { class: 'final-scores' },
     ranked.map((player) => {
-      const swatch = el('span', { class: 'swatch' })
-      swatch.style.backgroundColor = playerColorVar(player.id)
+      const avatarBadge = el('span', { class: 'avatar-badge' }, [player.avatar])
+      avatarBadge.style.backgroundColor = playerColorVar(player.id)
       const rowClass = `final-score-row${winnerIds.includes(player.id) ? ' winner' : ''}`
       return el('div', { class: rowClass }, [
-        swatch,
+        avatarBadge,
         el('span', { class: 'name' }, [player.name]),
         el('span', { class: 'score' }, [String(player.score)]),
       ])

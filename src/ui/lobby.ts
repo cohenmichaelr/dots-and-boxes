@@ -11,10 +11,11 @@ function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
-function swatch(color: string): HTMLElement {
+function avatarBadge(color: string, avatar: string): HTMLElement {
   const span = document.createElement('span')
-  span.className = 'swatch'
+  span.className = 'avatar-badge'
   span.style.backgroundColor = color
+  span.textContent = avatar
   return span
 }
 
@@ -38,11 +39,14 @@ export function renderLobbyScreen(
       { class: 'scoreboard-rows' },
       [
         ...lobby.participants.map((p) =>
-          el('div', { class: 'score-row' }, [swatch(p.color), el('span', { class: 'name' }, [p.name + (p.isHost ? ' (Host)' : '')])]),
+          el('div', { class: 'score-row' }, [
+            avatarBadge(p.color, p.avatar),
+            el('span', { class: 'name' }, [p.name + (p.isHost ? ' (Host)' : '')]),
+          ]),
         ),
         ...lobby.aiPlayers.map((a, i) =>
           el('div', { class: 'score-row' }, [
-            swatch(a.color),
+            avatarBadge(a.color, a.avatar),
             el('span', { class: 'name' }, [`Computer ${i + 1}`, el('span', { class: 'badge' }, [capitalize(a.difficulty)])]),
           ]),
         ),

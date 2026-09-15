@@ -19,6 +19,7 @@ export interface Player {
   type: PlayerType
   difficulty?: AiDifficulty
   color: string
+  avatar: string
   score: number
 }
 
@@ -75,6 +76,7 @@ export interface PlayerSetupConfig {
   type: PlayerType
   difficulty?: AiDifficulty
   color: string
+  avatar: string
 }
 
 export interface GameSetupConfig {

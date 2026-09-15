@@ -342,7 +342,7 @@ export function mountApp(root: HTMLElement): void {
       (result) => {
         sound.resumeIfNeeded()
         joinHandle.setBusy(true)
-        joinRoom(code, result.name, result.color)
+        joinRoom(code, result.name, result.color, result.avatar)
           .then((session) => showGuestLobby(session, code))
           .catch((error: unknown) => joinHandle.showError(errorMessage(error)))
       },
