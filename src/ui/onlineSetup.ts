@@ -206,7 +206,11 @@ export function renderOnlineSetupScreen(
     const panel = el('div', { class: 'setup-panel' }, [
       el('h1', {}, ['Play Online']),
       el('p', { class: 'setup-subtitle' }, [
-        "You'll get a link to send to another player. This works best while your device stays on and connected — the match ends if the host's tab closes.",
+        'Set yourself up below, then tap ',
+        el('strong', {}, ['Create Game']),
+        ". You'll land in a lobby with a link — copy it and send it to your friends so they can join. Once everyone's in, tap ",
+        el('strong', {}, ['Start Game']),
+        " to begin. Keep this device on and connected; the match ends if the host's tab closes.",
       ]),
       el('h2', {}, ['You']),
       hostRow,

@@ -87,7 +87,9 @@ export function renderLobbyScreen(
     const leaveButton = el('button', { class: 'btn secondary', onClick: onLeave }, [isHost ? 'Cancel' : 'Leave'])
 
     const children: HTMLElement[] = [el('h1', {}, ['Game Lobby'])]
-    if (linkRow) children.push(linkRow)
+    if (linkRow) {
+      children.push(el('p', { class: 'setup-subtitle' }, ['Send this link to your friends so they can join:']), linkRow)
+    }
     children.push(el('h2', {}, ['Players']), rows)
     if (errorEl) children.push(errorEl)
     if (startButton) children.push(startButton)
