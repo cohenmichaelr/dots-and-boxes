@@ -72,7 +72,49 @@ export function mountApp(root: HTMLElement): void {
     [resolveTheme() === 'dark' ? '🌙' : '☀️'],
   )
 
-  const headerActions = el('div', { class: 'header-actions' }, [themeButton, muteButton])
+  let menuOpen = false
+
+  function closeMenu(): void {
+    if (!menuOpen) return
+    menuOpen = false
+    menuDropdown.classList.remove('open')
+    document.removeEventListener('pointerdown', handleOutsideMenuClick)
+  }
+
+  function handleOutsideMenuClick(event: PointerEvent): void {
+    if (!menuWrapper.contains(event.target as Node)) closeMenu()
+  }
+
+  function goTo(destination: () => void): void {
+    closeMenu()
+    destination()
+  }
+
+  const menuDropdown = el('div', { class: 'menu-dropdown' }, [
+    el('button', { class: 'menu-item', onClick: () => goTo(showModeSelect) }, ['🏠 Home']),
+    el('button', { class: 'menu-item', onClick: () => goTo(showSetup) }, ['🎮 Start Game']),
+    el('button', { class: 'menu-item', onClick: () => goTo(showHighScores) }, ['🏆 High Scores']),
+  ])
+
+  const menuButton = el(
+    'button',
+    {
+      class: 'mute-toggle',
+      title: 'Menu',
+      ariaLabel: 'Menu',
+      onClick: () => {
+        menuOpen = !menuOpen
+        menuDropdown.classList.toggle('open', menuOpen)
+        if (menuOpen) document.addEventListener('pointerdown', handleOutsideMenuClick)
+        else document.removeEventListener('pointerdown', handleOutsideMenuClick)
+      },
+    },
+    ['☰'],
+  )
+
+  const menuWrapper = el('div', { class: 'menu-wrapper' }, [menuButton, menuDropdown])
+
+  const headerActions = el('div', { class: 'header-actions' }, [menuWrapper, themeButton, muteButton])
   const header = el('header', { class: 'app-header' }, [el('h1', {}, ['Dots and Boxes']), headerActions])
   const screen = el('div', { class: 'screen' })
   const shell = el('div', { class: 'app-shell' }, [header, screen])

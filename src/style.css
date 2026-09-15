@@ -198,6 +198,47 @@ button {
   gap: 8px;
 }
 
+.menu-wrapper {
+  position: relative;
+}
+
+.menu-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 10;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 180px;
+  padding: 6px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border-hairline);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px var(--panel-shadow-strong);
+}
+
+.menu-dropdown.open {
+  display: flex;
+}
+
+.menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.menu-item:hover {
+  background: var(--surface-tint);
+}
+
 .mute-toggle {
   border: none;
   background: var(--surface-tint);
